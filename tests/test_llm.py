@@ -62,5 +62,5 @@ def test_tldr(config,paper:Paper):
 @pytest.mark.ci
 def test_affiliations(config,paper:Paper):
     openai_client = OpenAI(api_key=config.llm.api.key, base_url=config.llm.api.base_url)
-    paper.generate_affiliations(openai_client, config.llm)
+    paper.generate_affiliations(openai_client)
     assert paper.affiliations is not None

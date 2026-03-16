@@ -6,21 +6,26 @@ zotero:
 email:
   sender: ${oc.env:SENDER}
   receiver: ${oc.env:RECEIVER}
-  smtp_server: smtp.qq.com
-  smtp_port: 465
+  smtp_server: ${oc.env:SMTP_SERVER}
+  smtp_port: ${oc.env:SMTP_PORT}
   sender_password: ${oc.env:SENDER_PASSWORD}
 
 llm:
   api:
-    key: ${oc.env:OPENAI_API_KEY}
-    base_url: ${oc.env:OPENAI_API_BASE}
-  generation_kwargs:
-    model: gpt-4o-mini
+    key: ${oc.env:API_KEY}
+  tldr:
+    model: mistral-small-latest
+  affiliations:
+    model: mistral-small-latest
+  embeddings:
+    model: mistral-embed
+
 
 source:
   arxiv:
     category: ["cs.AI","cs.CV","cs.LG","cs.CL"]
 
 executor:
-  debug: ${oc.env:DEBUG,null}
+  # debug: ${oc.env:DEBUG,null}
+  debug: True
   source: ['arxiv']

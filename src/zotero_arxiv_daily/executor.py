@@ -1,3 +1,5 @@
+import hydra
+from hydra.utils import instantiate
 from loguru import logger
 from pyzotero import zotero
 from omegaconf import DictConfig
@@ -9,16 +11,23 @@ from datetime import datetime
 from .reranker import get_reranker_cls
 from .construct_email import render_email
 from .utils import send_email
-from openai import OpenAI
 from tqdm import tqdm
+
 class Executor:
     def __init__(self, config:DictConfig):
         self.config = config
+
+        self.api_client = instantiate(
+            config.llm.available_providers[config.llm.provider],
+            config.llm,
+            # base_url=config.llm.api.base_url
+        )
+
         self.retrievers = {
             source: get_retriever_cls(source)(config) for source in config.executor.source
         }
         self.reranker = get_reranker_cls(config.executor.reranker)(config)
-        self.openai_client = OpenAI(api_key=config.llm.api.key, base_url=config.llm.api.base_url)
+    
     def fetch_zotero_corpus(self) -> list[CorpusPaper]:
         logger.info("Fetching zotero corpus")
         zot = zotero.Zotero(self.config.zotero.user_id, 'user', self.config.zotero.api_key)
@@ -80,11 +89,12 @@ class Executor:
             reranked_papers = reranked_papers[:self.config.executor.max_paper_num]
             logger.info("Generating TLDR and affiliations...")
             for p in tqdm(reranked_papers):
-                p.generate_tldr(self.openai_client, self.config.llm)
-                p.generate_affiliations(self.openai_client, self.config.llm)
+                p.generate_tldr(self.api_client)
+                p.generate_affiliations(self.api_client)
         elif not self.config.executor.send_empty:
             logger.info("No new papers found. No email will be sent.")
             return
+
         logger.info("Sending email...")
         email_content = render_email(reranked_papers)
         send_email(self.config, email_content)
