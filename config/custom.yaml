@@ -20,7 +20,6 @@ llm:
   embeddings:
     model: mistral-embed
 
-
 source:
   arxiv:
     category: ["cs.AI","cs.CV","cs.LG","cs.CL"]
@@ -29,3 +28,4 @@ executor:
   # debug: ${oc.env:DEBUG,null}
   debug: True
   source: ['arxiv']
+  send_empty: true # Whether to send an empty email even if no new papers today. Example: true
