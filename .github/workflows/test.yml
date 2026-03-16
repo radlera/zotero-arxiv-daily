@@ -23,6 +23,8 @@ jobs:
           SENDER: ${{ secrets.SENDER }}
           RECEIVER: ${{ secrets.RECEIVER }}
           SENDER_PASSWORD: ${{ secrets.SENDER_PASSWORD }}
+          SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
           API_KEY: ${{ secrets.API_KEY }}
           API_BASE: ${{ secrets.API_BASE }}
           CUSTOM_CONFIG: ${{ vars.CUSTOM_CONFIG }}
