@@ -58,6 +58,7 @@ class ArxivRetriever(BaseRetriever):
         except TimeoutError:
             logger.warning(f"PDF extraction timed out for {raw_paper.title}")
             full_text = None
+            
         if full_text is None:
             full_text = extract_text_from_tar(raw_paper)
         return Paper(
