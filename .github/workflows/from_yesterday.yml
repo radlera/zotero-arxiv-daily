@@ -1,4 +1,4 @@
-name: Send emails daily
+name: Send emails from yesterday
 on:
   workflow_dispatch:
   # schedule:
