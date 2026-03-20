@@ -28,4 +28,5 @@ executor:
   # debug: ${oc.env:DEBUG,null}
   debug: True
   source: ['arxiv']
-  send_empty: true # Whether to send an empty email even if no new papers today. Example: true
+  send_empty: True # Whether to send an empty email even if no new papers today. Example: true
+  from_yesterday: ${oc.env:FROM_YESTERDAY,null}
