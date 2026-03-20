@@ -18,7 +18,7 @@ from loguru import logger
 
 PDF_EXTRACT_TIMEOUT = 180
 
-def get_paper_ids():
+def get_raw_papers():
     # Define the categories and date range
     categories = ["cs.AI", "cs.CV", "cs.LG", "cs.CL"]
     yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y%m%d")
@@ -40,12 +40,7 @@ def get_paper_ids():
     # Parse the XML response
     feed = feedparser.parse(response.text)
     print(f'retrieved {len(feed.entries)}')
-
-    all_paper_ids = [
-        i.id.removeprefix("http://arxiv.org/abs/").split('v')[0]
-        for i in feed.entries
-    ]
-    return all_paper_ids
+    return feed.entries
 
 
 @register_retriever("arxiv")
@@ -55,7 +50,7 @@ class ArxivRetriever(BaseRetriever):
         if self.config.source.arxiv.category is None:
             raise ValueError("category must be specified for arxiv.")
     def _retrieve_raw_papers(self) -> list[ArxivResult]:
-        # client = arxiv.Client(num_retries=10,delay_seconds=10)
+        client = arxiv.Client(num_retries=10,delay_seconds=10)
         # query = '+'.join(self.config.source.arxiv.category)
         # include_cross_list = self.config.source.arxiv.get("include_cross_list", False)
         # # Get the latest paper from arxiv rss feed
@@ -73,7 +68,12 @@ class ArxivRetriever(BaseRetriever):
         #     # if i.get("published").startswith('')
         # ]
 
-        all_paper_ids = get_paper_ids()
+        raw_papers = get_raw_papers()
+
+        all_paper_ids = [
+            i.id.removeprefix("http://arxiv.org/abs/").split('v')[0]
+            for i in raw_papers
+        ]
 
         if self.config.executor.debug:
             all_paper_ids = all_paper_ids[:10]
