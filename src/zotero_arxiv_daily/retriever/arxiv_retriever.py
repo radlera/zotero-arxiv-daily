@@ -1,3 +1,7 @@
+from datetime import datetime, timedelta
+import requests
+from datetime import datetime, timedelta
+import feedparser
 from .base import BaseRetriever, register_retriever
 import arxiv
 from arxiv import Result as ArxivResult
@@ -11,7 +15,39 @@ from tqdm import tqdm
 import os
 from loguru import logger
 
+
 PDF_EXTRACT_TIMEOUT = 180
+
+def get_paper_ids():
+    # Define the categories and date range
+    categories = ["cs.AI", "cs.CV", "cs.LG", "cs.CL"]
+    yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y%m%d")
+
+    # Construct the search query for the arXiv API
+    search_query = " OR ".join([f"cat:{cat}" for cat in categories])
+    base_url = "http://export.arxiv.org/api/query?"
+
+    params = {
+        "search_query": f"({search_query}) AND submittedDate:[{yesterday}0000 TO {yesterday}2359]",
+        "start": 0,
+        "max_results": 1000,  # Adjust as needed
+    }
+
+    # Make the API request
+    response = requests.get(base_url, params=params)
+    # print(response.text)
+
+    # Parse the XML response
+    feed = feedparser.parse(response.text)
+    print(f'retrieved {len(feed.entries)}')
+
+    all_paper_ids = [
+        i.id.removeprefix("http://arxiv.org/abs/").split('v')[0]
+        for i in feed.entries
+    ]
+    return all_paper_ids
+
+
 @register_retriever("arxiv")
 class ArxivRetriever(BaseRetriever):
     def __init__(self, config):
@@ -19,20 +55,26 @@ class ArxivRetriever(BaseRetriever):
         if self.config.source.arxiv.category is None:
             raise ValueError("category must be specified for arxiv.")
     def _retrieve_raw_papers(self) -> list[ArxivResult]:
-        client = arxiv.Client(num_retries=10,delay_seconds=10)
-        query = '+'.join(self.config.source.arxiv.category)
-        include_cross_list = self.config.source.arxiv.get("include_cross_list", False)
-        # Get the latest paper from arxiv rss feed
-        feed = feedparser.parse(f"https://rss.arxiv.org/atom/{query}")
-        if 'Feed error for query' in feed.feed.title:
-            raise Exception(f"Invalid ARXIV_QUERY: {query}.")
-        raw_papers = []
-        allowed_announce_types = {"new", "cross"} if include_cross_list else {"new"}
-        all_paper_ids = [
-            i.id.removeprefix("oai:arXiv.org:")
-            for i in feed.entries
-            if i.get("arxiv_announce_type", "new") in allowed_announce_types
-        ]
+        # client = arxiv.Client(num_retries=10,delay_seconds=10)
+        # query = '+'.join(self.config.source.arxiv.category)
+        # include_cross_list = self.config.source.arxiv.get("include_cross_list", False)
+        # # Get the latest paper from arxiv rss feed
+        # feed = feedparser.parse(f"https://rss.arxiv.org/atom/{query}")
+        # if 'Feed error for query' in feed.feed.title:
+        #     raise Exception(f"Invalid ARXIV_QUERY: {query}.")
+        # raw_papers = []
+        # # allowed_announce_types = {"new", "cross"} if include_cross_list else {"new"}
+        # yesterday = datetime.now() - timedelta(days=1)
+        # formatted_date = yesterday.strftime("%Y-%m-%d")
+        # all_paper_ids = [
+        #     i.id.removeprefix("oai:arXiv.org:")
+        #     for i in feed.entries
+        #     # if i.get("arxiv_announce_type", "new") in allowed_announce_types
+        #     # if i.get("published").startswith('')
+        # ]
+
+        all_paper_ids = get_paper_ids()
+
         if self.config.executor.debug:
             all_paper_ids = all_paper_ids[:10]
 
@@ -103,3 +145,5 @@ def extract_text_from_tar(paper: ArxivResult) -> str | None:
             logger.warning(f"Failed to extract full text of {paper.title} from tar: {e}")
             full_text = None
         return full_text
+    
+
