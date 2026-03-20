@@ -29,6 +29,7 @@ class ArxivRetriever(BaseRetriever):
         client = arxiv.Client(num_retries=10,delay_seconds=10)
         
         if self.config.executor.get('from_yesterday', False):
+            print(f'get papers from yesterday ...')
             all_paper_ids = get_yesterday_papers()
         else: 
             all_paper_ids = self.get_rss_papers(client)
