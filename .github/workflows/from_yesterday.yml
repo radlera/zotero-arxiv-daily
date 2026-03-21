@@ -28,9 +28,9 @@ jobs:
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
           API_KEY: ${{ secrets.API_KEY }}
           API_BASE: ${{ secrets.API_BASE }}
-          FROM_YESTERDAY: True
           CUSTOM_CONFIG: ${{ vars.CUSTOM_CONFIG }}
         run: |
+          export FROM_YESTERDAY=true
           printf "%b\n" "$CUSTOM_CONFIG" > config/custom.yaml
           echo "Use custom config: "
           cat config/custom.yaml
