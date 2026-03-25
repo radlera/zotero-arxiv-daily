@@ -54,15 +54,16 @@ class ArxivRetriever(BaseRetriever):
         authors = [a.name for a in raw_paper.authors]
         abstract = raw_paper.summary
         pdf_url = raw_paper.pdf_url
-        try:
-            with ThreadPoolExecutor(max_workers=1) as pool:
-                full_text = pool.submit(extract_text_from_pdf, raw_paper).result(timeout=PDF_EXTRACT_TIMEOUT)
-        except TimeoutError:
-            logger.warning(f"PDF extraction timed out for {raw_paper.title}")
-            full_text = None
+        # try:
+        #     with ThreadPoolExecutor(max_workers=1) as pool:
+        #         full_text = pool.submit(extract_text_from_pdf, raw_paper).result(timeout=PDF_EXTRACT_TIMEOUT)
+        # except TimeoutError:
+        #     logger.warning(f"PDF extraction timed out for {raw_paper.title}")
+        #     full_text = None
             
-        if full_text is None:
-            full_text = extract_text_from_tar(raw_paper)
+        # if full_text is None:
+        #     full_text = extract_text_from_tar(raw_paper)
+        full_text = None
         return Paper(
             source=self.name,
             title=title,
@@ -156,6 +157,8 @@ def get_yesterday_papers():
             i.id.removeprefix("http://arxiv.org/abs/").split('v')[0]
             for i in raw_papers
         ]
+    
+    print(f'fetched {len(all_paper_ids)} papers')
 
     return all_paper_ids
 
