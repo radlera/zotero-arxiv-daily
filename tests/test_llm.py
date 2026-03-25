@@ -1,7 +1,7 @@
 import pytest
 import pickle
 from openai import OpenAI
-from zotero_arxiv_daily.protocol import Paper
+from zotero_arxiv_daily.paper import Paper
 @pytest.fixture
 def paper() -> Paper:
     full_text = r"""

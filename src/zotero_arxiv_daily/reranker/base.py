@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from omegaconf import DictConfig
-from ..protocol import Paper, CorpusPaper
+from ..paper import Paper, CorpusPaper
 import numpy as np
 from typing import Type
 class BaseReranker(ABC):

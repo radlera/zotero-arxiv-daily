@@ -3,9 +3,12 @@ from hydra.utils import instantiate
 from loguru import logger
 from pyzotero import zotero
 from omegaconf import DictConfig
+
+from zotero_arxiv_daily.reranker.simple_reranker import SimpleReranker
+from zotero_arxiv_daily.retriever.simple_arxiv_retriever import SimpleArxivRetriever
 from .utils import glob_match
 from .retriever import get_retriever_cls
-from .protocol import CorpusPaper
+from .paper import CorpusPaper
 import random
 from datetime import datetime
 from .reranker import get_reranker_cls
@@ -23,10 +26,14 @@ class Executor:
             # base_url=config.llm.api.base_url
         )
 
+        # self.retrievers = {
+        #     source: get_retriever_cls(source)(config) for source in config.executor.source
+        # }
         self.retrievers = {
-            source: get_retriever_cls(source)(config) for source in config.executor.source
+            'arxiv': SimpleArxivRetriever(config)
         }
-        self.reranker = get_reranker_cls(config.executor.reranker)(config)
+        # self.reranker = get_reranker_cls(config.executor.reranker)(config)
+        self.reranker = SimpleReranker(config)
     
     def fetch_zotero_corpus(self) -> list[CorpusPaper]:
         logger.info("Fetching zotero corpus")
@@ -85,12 +92,12 @@ class Executor:
         reranked_papers = []
         if len(all_papers) > 0:
             logger.info("Reranking papers...")
-            reranked_papers = self.reranker.rerank(all_papers, corpus)
+            reranked_papers = self.reranker.rerank(self.api_client, all_papers, corpus)
             reranked_papers = reranked_papers[:self.config.executor.max_paper_num]
             logger.info("Generating TLDR and affiliations...")
             for p in tqdm(reranked_papers):
                 p.generate_tldr(self.api_client)
-                p.generate_affiliations(self.api_client)
+                # p.generate_affiliations(self.api_client)
         elif not self.config.executor.send_empty:
             logger.info("No new papers found. No email will be sent.")
             return

@@ -1,6 +1,6 @@
 import requests
 from .base import BaseRetriever, register_retriever
-from ..protocol import Paper
+from ..paper import Paper
 from loguru import logger
 from typing import Any
 from time import sleep

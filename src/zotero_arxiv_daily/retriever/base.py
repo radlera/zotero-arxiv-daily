@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from omegaconf import DictConfig
-from ..protocol import Paper, RawPaperItem
+from ..paper import Paper, RawPaperItem
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from tqdm import tqdm
 from typing import Type

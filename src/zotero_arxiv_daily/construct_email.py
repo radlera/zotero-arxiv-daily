@@ -1,4 +1,4 @@
-from .protocol import Paper
+from .paper import Paper
 import math
 
 

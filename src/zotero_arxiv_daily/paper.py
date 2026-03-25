@@ -2,7 +2,6 @@ from dataclasses import dataclass
 from typing import Optional, TypeVar
 from datetime import datetime
 import re
-import tiktoken
 from loguru import logger
 import json
 

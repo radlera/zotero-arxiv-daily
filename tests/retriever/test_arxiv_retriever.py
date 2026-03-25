@@ -1,4 +1,4 @@
-from zotero_arxiv_daily.retriever.arxiv_retriever import ArxivRetriever
+from zotero_arxiv_daily.retriever.simple_arxiv_retriever import ArxivRetriever
 import feedparser
 import pickle
 

@@ -5,7 +5,7 @@ import feedparser
 from .base import BaseRetriever, register_retriever
 import arxiv
 from arxiv import Result as ArxivResult
-from ..protocol import Paper
+from ..paper import Paper
 from ..utils import extract_markdown_from_pdf, extract_tex_code_from_tar
 from tempfile import TemporaryDirectory
 from concurrent.futures import ThreadPoolExecutor, TimeoutError

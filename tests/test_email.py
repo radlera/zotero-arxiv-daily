@@ -1,6 +1,6 @@
 import pytest
 import pickle
-from zotero_arxiv_daily.protocol import Paper
+from zotero_arxiv_daily.paper import Paper
 from zotero_arxiv_daily.construct_email import render_email
 from zotero_arxiv_daily.utils import send_email
 @pytest.fixture
