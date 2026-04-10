@@ -69,7 +69,7 @@ class MistralWrapper(BaseAPI):
     
     def get_embedding(self, all_texts) -> np.ndarray:
 
-        batch_size = self.config.embeddings.get('batch_size', 64)
+        batch_size = self.config.embeddings.get('batch_size', 32)
 
         all_embeddings = []
 
