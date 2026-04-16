@@ -74,7 +74,7 @@ def get_yesterday_papers():
     base_url = "http://export.arxiv.org/api/query?"
 
     params = {
-        "search_query": f"({search_query}) AND submittedDate:[{yesterday}0000 TO {yesterday}2359]",
+        "search_query": f"({search_query}) AND lastUpdatedDate:[{yesterday}0000 TO {yesterday}2359]",
         "start": 0,
         "max_results": 1000,  # Adjust as needed
     }
