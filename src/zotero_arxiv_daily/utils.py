@@ -1,4 +1,5 @@
 import tarfile
+import time
 import re
 import glob
 import smtplib
@@ -92,12 +93,13 @@ def glob_match(path:str, pattern:str) -> bool:
     re_pattern = glob.translate(pattern,recursive=True)
     return re.match(re_pattern, path) is not None
 
-def send_email(config:DictConfig, html:str):
+def send_email(config: DictConfig, html: str):
     sender = config.email.sender
     receiver = config.email.receiver
     password = config.email.sender_password
     smtp_server = config.email.smtp_server
     smtp_port = config.email.smtp_port
+
     def _format_addr(s):
         name, addr = parseaddr(s)
         return formataddr((Header(name, 'utf-8').encode(), addr))
@@ -108,17 +110,48 @@ def send_email(config:DictConfig, html:str):
     today = datetime.datetime.now().strftime('%Y/%m/%d')
     msg['Subject'] = Header(f'Daily arXiv {today}', 'utf-8').encode()
 
-    try:
-        server = smtplib.SMTP(smtp_server, smtp_port)
-        server.starttls()
-    except Exception as e:
-        logger.debug(f"Failed to use TLS. {e}\nTry to use SSL.")
+    def _connect():
+        """Try TLS → SSL → plain, return a connected SMTP server."""
+        try:
+            server = smtplib.SMTP(smtp_server, smtp_port)
+            server.ehlo()
+            server.starttls()
+            server.ehlo()  # re-identify after TLS upgrade
+            logger.debug("Connected via STARTTLS.")
+            return server
+        except Exception as e:
+            logger.debug(f"Failed to use TLS. {e}\nTrying SSL.")
+
         try:
             server = smtplib.SMTP_SSL(smtp_server, smtp_port)
+            server.ehlo()
+            logger.debug("Connected via SSL.")
+            return server
         except Exception as e:
-            logger.debug(f"Failed to use SSL. {e}\nTry to use plain text.")
-            server = smtplib.SMTP(smtp_server, smtp_port)
+            logger.debug(f"Failed to use SSL. {e}\nTrying plain text.")
 
-    server.login(sender, password)
-    server.sendmail(sender, [receiver], msg.as_string())
-    server.quit()
+        server = smtplib.SMTP(smtp_server, smtp_port)
+        server.ehlo()
+        logger.debug("Connected via plain SMTP.")
+        return server
+
+    retries = 3
+    for attempt in range(retries):
+        try:
+            server = _connect()
+            time.sleep(0.5)  # brief pause to let auth settle after TLS
+            server.login(sender, password)
+            server.sendmail(sender, [receiver], msg.as_string())
+            server.quit()
+            logger.debug("Email sent successfully.")
+            return
+        except smtplib.SMTPAuthenticationError as e:
+            logger.warning(f"Auth failed on attempt {attempt + 1}/{retries}: {e}")
+            if attempt < retries - 1:
+                time.sleep(5 * (attempt + 1))  # 5s, 10s backoff
+            else:
+                logger.error("All retry attempts exhausted.")
+                raise
+        except Exception as e:
+            logger.error(f"Unexpected error sending email: {e}")
+            raise
